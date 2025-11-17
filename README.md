@@ -76,6 +76,8 @@ Another servo tilts the panel vertically.
 
 https://github.com/VedhathiriK/Dual-Axis-Solar-Tracking-System-Using-Arduino/blob/main/Source_Code
 
+Author:
+Vedhathiri.K
 
 🏁 Conclusion:
 
