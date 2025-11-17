@@ -1,0 +1,106 @@
+#include <Servo.h>
+
+// ======== Servo Setup ========
+Servo horizontal;  // Horizontal Servo Motor
+Servo vertical;    // Vertical Servo Motor
+
+int servohori = 180;  // Initial horizontal angle
+int servovert = 45;   // Initial vertical angle
+
+// Servo angle limits
+int servohoriLimitHigh = 175;
+int servohoriLimitLow  = 5;
+int servovertLimitHigh = 100;
+int servovertLimitLow  = 1;
+
+// ======== LDR Pins ========
+int ldrlt = A0; // Top Left LDR
+int ldrrt = A3; // Top Right LDR
+int ldrld = A1; // Bottom Left LDR
+int ldrrd = A2; // Bottom Right LDR
+
+// ======== Function: Read Average LDR Value ========
+int readAverage(int pin) {
+  long total = 0;
+  for (int i = 0; i < 10; i++) {
+    total += analogRead(pin);
+    delay(2);  // small sampling delay for stable reading
+  }
+  return total / 10;
+}
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("=====================================");
+  Serial.println("Dual Axis Solar Tracker System Started");
+  Serial.println("=====================================");
+
+  horizontal.attach(2);   // Horizontal servo pin
+  vertical.attach(13);    // Vertical servo pin
+
+  horizontal.write(servohori);
+  vertical.write(servovert);
+
+  delay(2000);
+}
+
+void loop() {
+  // ======== Read and Filter LDR Values ========
+  int lt = readAverage(ldrlt);  // Top Left
+  int rt = readAverage(ldrrt);  // Top Right
+  int ld = readAverage(ldrld);  // Bottom Left
+  int rd = readAverage(ldrrd);  // Bottom Right
+
+  // ======== Control Parameters ========
+  int tol = 40;  // tolerance for movement (higher = less sensitive)
+  int step = 2;   // servo movement step
+  int avgLight = (lt + rt + ld + rd) / 4;
+
+  // ======== Ignore at Low Light (Night Mode) ========
+  if (avgLight < 200) {
+    Serial.println("Low light detected — Tracker on standby...");
+    delay(500);
+    return;
+  }
+
+  // ======== Compute Averages ========
+  int avt = (lt + rt) / 2;  // average of top sensors
+  int avd = (ld + rd) / 2;  // average of bottom sensors
+  int avl = (lt + ld) / 2;  // average of left sensors
+  int avr = (rt + rd) / 2;  // average of right sensors
+
+  // ======== Calculate Differences ========
+  int dvert = avt - avd;   // vertical difference
+  int dhoriz = avl - avr;  // horizontal difference
+
+  // ======== Vertical Adjustment ========
+  if (abs(dvert) > tol) {
+    if (avt > avd) servovert += step;
+    else servovert -= step;
+
+    servovert = constrain(servovert, servovertLimitLow, servovertLimitHigh);
+    vertical.write(servovert);
+  }
+
+  // ======== Horizontal Adjustment ========
+  if (abs(dhoriz) > tol) {
+    if (avl > avr) servohori -= step;
+    else servohori += step;
+
+    servohori = constrain(servohori, servohoriLimitLow, servohoriLimitHigh);
+    horizontal.write(servohori);
+  }
+
+  // ======== Debug Output ========
+  Serial.print("TL: "); Serial.print(lt);
+  Serial.print("  TR: "); Serial.print(rt);
+  Serial.print("  BL: "); Serial.print(ld);
+  Serial.print("  BR: "); Serial.print(rd);
+  Serial.print("  |  dV: "); Serial.print(dvert);
+  Serial.print("  dH: "); Serial.print(dhoriz);
+  Serial.print("  |  H: "); Serial.print(servohori);
+  Serial.print("°  V: "); Serial.println(servovert);
+
+  // ======== Small Delay for Stability ========
+  delay(2);
+}
