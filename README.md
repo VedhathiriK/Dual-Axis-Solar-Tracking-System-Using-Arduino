@@ -76,9 +76,11 @@ Another servo tilts the panel vertically.
 
 https://github.com/VedhathiriK/Dual-Axis-Solar-Tracking-System-Using-Arduino/blob/main/Source_Code
 
-Author:
-Vedhathiri.K
+
 
 🏁 Conclusion:
 
 The Dual Axis Solar Tracking System ensures maximum solar energy harvesting by dynamically adjusting the panel to face the sun throughout the day. Using simple components and an Arduino controller, this project offers a practical and effective solution for improving solar efficiency.
+
+Author:
+Vedhathiri.K
